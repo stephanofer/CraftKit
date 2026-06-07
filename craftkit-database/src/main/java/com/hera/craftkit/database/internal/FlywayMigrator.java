@@ -1,0 +1,68 @@
+package com.hera.craftkit.database.internal;
+
+import com.hera.craftkit.database.DatabaseException;
+import com.hera.craftkit.database.MigrationConfig;
+import org.flywaydb.core.Flyway;
+
+import javax.sql.DataSource;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public final class FlywayMigrator implements DatabaseMigrator {
+
+    private static final String FLYWAY_HISTORY_TABLE_NAME = "flyway_schema_history";
+
+    private final DataSource dataSource;
+    private final MigrationConfig config;
+    private final String tablePrefix;
+
+    public FlywayMigrator(final DataSource dataSource, final MigrationConfig config, final String tablePrefix) {
+        this.dataSource = Objects.requireNonNull(dataSource, "DataSource must not be null.");
+        this.config = Objects.requireNonNull(config, "Migration config must not be null.");
+        this.tablePrefix = TablePrefixes.validatePrefix(Objects.requireNonNull(tablePrefix, "Table prefix must not be null."));
+    }
+
+    public boolean isEnabled() {
+        return this.config.enabled();
+    }
+
+    @Override
+    public void migrate() {
+        if (!this.config.enabled()) {
+            return;
+        }
+        try {
+            this.createFlyway().migrate();
+        } catch (final RuntimeException exception) {
+            throw new DatabaseException("Failed to run Flyway migrations.", exception);
+        }
+    }
+
+    List<String> locations() {
+        return this.config.locations();
+    }
+
+    Map<String, String> placeholders() {
+        final Map<String, String> placeholders = new LinkedHashMap<>(this.config.placeholders());
+        placeholders.put("tablePrefix", this.tablePrefix);
+        return Map.copyOf(placeholders);
+    }
+
+    String historyTable() {
+        return TablePrefixes.table(this.tablePrefix, FLYWAY_HISTORY_TABLE_NAME);
+    }
+
+    Flyway createFlyway() {
+        return Flyway.configure()
+            .dataSource(this.dataSource)
+            .locations(this.config.locations().toArray(String[]::new))
+            .baselineOnMigrate(this.config.baselineOnMigrate())
+            .validateOnMigrate(this.config.validateOnMigrate())
+            .cleanDisabled(this.config.cleanDisabled())
+            .placeholders(this.placeholders())
+            .table(this.historyTable())
+            .load();
+    }
+}

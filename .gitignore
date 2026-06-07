@@ -1,0 +1,16 @@
+# Local Pi runtime state
+.atl/
+
+# Gradle
+.gradle/
+build/
+**/build/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.log

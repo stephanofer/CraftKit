@@ -1,0 +1,18 @@
+[versions]
+paper = "26.1.2.build.69-stable"
+junit = "6.1.0"
+hikari = "7.0.2"
+mysql = "9.7.0"
+lettuce = "7.6.0.RELEASE"
+flyway = "12.8.1"
+
+[libraries]
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
