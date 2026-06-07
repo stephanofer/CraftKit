@@ -1,8 +1,10 @@
 package com.hera.craftkit.database.internal;
 
 import com.hera.craftkit.database.DatabaseException;
+import com.hera.craftkit.database.ExistingSchemaStrategy;
 import com.hera.craftkit.database.MigrationConfig;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
 
 import javax.sql.DataSource;
 import java.util.LinkedHashMap;
@@ -54,11 +56,24 @@ public final class FlywayMigrator implements DatabaseMigrator {
         return TablePrefixes.table(this.tablePrefix, FLYWAY_HISTORY_TABLE_NAME);
     }
 
+    boolean baselineOnMigrate() {
+        return this.config.baselineOnMigrate() || this.config.existingSchemaStrategy() != ExistingSchemaStrategy.FAIL;
+    }
+
+    String baselineVersion() {
+        if (this.config.existingSchemaStrategy() == ExistingSchemaStrategy.BASELINE_AT_ZERO) {
+            return "0";
+        }
+        return this.config.baselineVersion();
+    }
+
     Flyway createFlyway() {
         return Flyway.configure()
             .dataSource(this.dataSource)
             .locations(this.config.locations().toArray(String[]::new))
-            .baselineOnMigrate(this.config.baselineOnMigrate())
+            .baselineOnMigrate(this.baselineOnMigrate())
+            .baselineVersion(MigrationVersion.fromVersion(this.baselineVersion()))
+            .baselineDescription(this.config.baselineDescription())
             .validateOnMigrate(this.config.validateOnMigrate())
             .cleanDisabled(this.config.cleanDisabled())
             .placeholders(this.placeholders())

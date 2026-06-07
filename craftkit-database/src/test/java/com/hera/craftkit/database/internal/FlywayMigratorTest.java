@@ -1,6 +1,7 @@
 package com.hera.craftkit.database.internal;
 
 import com.hera.craftkit.database.DatabaseException;
+import com.hera.craftkit.database.ExistingSchemaStrategy;
 import com.hera.craftkit.database.MigrationConfig;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,42 @@ final class FlywayMigratorTest {
         assertEquals("ck_", migrator.placeholders().get("tablePrefix"));
         assertEquals("ck_flyway_schema_history", migrator.historyTable());
         assertTrue(migrator.createFlyway().getConfiguration().isCleanDisabled());
+    }
+
+    @Test
+    void failStrategyDoesNotBaselineByDefault() {
+        final FlywayMigrator migrator = new FlywayMigrator(new FailingDataSource(), MigrationConfig.builder().build(), "ck_");
+
+        assertTrue(!migrator.baselineOnMigrate());
+        assertEquals("0", migrator.baselineVersion());
+        assertTrue(!migrator.createFlyway().getConfiguration().isBaselineOnMigrate());
+    }
+
+    @Test
+    void baselineAtZeroSupportsSharedDatabasesWithoutSkippingV1() {
+        final MigrationConfig config = MigrationConfig.builder()
+            .existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)
+            .baselineVersion("9")
+            .build();
+        final FlywayMigrator migrator = new FlywayMigrator(new FailingDataSource(), config, "survival_");
+
+        assertTrue(migrator.baselineOnMigrate());
+        assertEquals("0", migrator.baselineVersion());
+        assertTrue(migrator.createFlyway().getConfiguration().isBaselineOnMigrate());
+    }
+
+    @Test
+    void baselineAtVersionSupportsAdoptingExistingPluginTables() {
+        final MigrationConfig config = MigrationConfig.builder()
+            .existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_VERSION)
+            .baselineVersion("1")
+            .baselineDescription("Existing pre-Flyway schema")
+            .build();
+        final FlywayMigrator migrator = new FlywayMigrator(new FailingDataSource(), config, "survival_");
+
+        assertTrue(migrator.baselineOnMigrate());
+        assertEquals("1", migrator.baselineVersion());
+        assertTrue(migrator.createFlyway().getConfiguration().isBaselineOnMigrate());
     }
 
     @Test

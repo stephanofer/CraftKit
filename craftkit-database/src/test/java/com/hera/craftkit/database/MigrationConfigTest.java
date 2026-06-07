@@ -17,6 +17,17 @@ final class MigrationConfigTest {
         assertEquals(MigrationConfig.DEFAULT_LOCATION, config.locations().getFirst());
         assertTrue(config.validateOnMigrate());
         assertTrue(config.cleanDisabled());
+        assertEquals(ExistingSchemaStrategy.FAIL, config.existingSchemaStrategy());
+        assertEquals("0", config.baselineVersion());
+        assertEquals("CraftKit baseline", config.baselineDescription());
+    }
+
+    @Test
+    void sharedDatabaseDefaultsBaselineAtZeroForSharedSchemas() {
+        final MigrationConfig config = MigrationConfig.sharedDatabaseDefaults();
+
+        assertEquals(ExistingSchemaStrategy.BASELINE_AT_ZERO, config.existingSchemaStrategy());
+        assertEquals("0", config.baselineVersion());
     }
 
     @Test
@@ -25,5 +36,8 @@ final class MigrationConfigTest {
         assertThrows(DatabaseException.class, () -> MigrationConfig.builder().clearLocations().enabled(false).addLocation(" ").build());
         assertThrows(DatabaseException.class, () -> MigrationConfig.builder().putPlaceholder("", "value").build());
         assertThrows(DatabaseException.class, () -> MigrationConfig.builder().putPlaceholder("key", null).build());
+        assertThrows(DatabaseException.class, () -> MigrationConfig.builder().baselineVersion(" ").build());
+        assertThrows(DatabaseException.class, () -> MigrationConfig.builder().baselineVersion("one").build());
+        assertThrows(DatabaseException.class, () -> MigrationConfig.builder().baselineDescription(" ").build());
     }
 }

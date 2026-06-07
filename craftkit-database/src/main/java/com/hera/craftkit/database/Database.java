@@ -13,6 +13,10 @@ public interface Database extends AutoCloseable {
 
     CompletableFuture<Void> execute(SqlOperation operation);
 
+    <T> CompletableFuture<T> transaction(SqlTransaction<T> transaction);
+
+    <T> CompletableFuture<T> transaction(TransactionOptions options, SqlTransaction<T> transaction);
+
     DataSource dataSource();
 
     String tablePrefix();

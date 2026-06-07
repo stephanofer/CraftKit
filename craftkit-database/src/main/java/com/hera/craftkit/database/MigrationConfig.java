@@ -15,6 +15,9 @@ public final class MigrationConfig {
     private final boolean baselineOnMigrate;
     private final boolean validateOnMigrate;
     private final boolean cleanDisabled;
+    private final ExistingSchemaStrategy existingSchemaStrategy;
+    private final String baselineVersion;
+    private final String baselineDescription;
     private final Map<String, String> placeholders;
 
     private MigrationConfig(
@@ -23,6 +26,9 @@ public final class MigrationConfig {
         final boolean baselineOnMigrate,
         final boolean validateOnMigrate,
         final boolean cleanDisabled,
+        final ExistingSchemaStrategy existingSchemaStrategy,
+        final String baselineVersion,
+        final String baselineDescription,
         final Map<String, String> placeholders
     ) {
         this.enabled = enabled;
@@ -30,11 +36,20 @@ public final class MigrationConfig {
         this.baselineOnMigrate = baselineOnMigrate;
         this.validateOnMigrate = validateOnMigrate;
         this.cleanDisabled = cleanDisabled;
+        this.existingSchemaStrategy = existingSchemaStrategy;
+        this.baselineVersion = baselineVersion;
+        this.baselineDescription = baselineDescription;
         this.placeholders = placeholders;
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public static MigrationConfig sharedDatabaseDefaults() {
+        return builder()
+            .existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)
+            .build();
     }
 
     public boolean enabled() {
@@ -57,6 +72,18 @@ public final class MigrationConfig {
         return this.cleanDisabled;
     }
 
+    public ExistingSchemaStrategy existingSchemaStrategy() {
+        return this.existingSchemaStrategy;
+    }
+
+    public String baselineVersion() {
+        return this.baselineVersion;
+    }
+
+    public String baselineDescription() {
+        return this.baselineDescription;
+    }
+
     public Map<String, String> placeholders() {
         return this.placeholders;
     }
@@ -68,6 +95,9 @@ public final class MigrationConfig {
             + ", baselineOnMigrate=" + this.baselineOnMigrate
             + ", validateOnMigrate=" + this.validateOnMigrate
             + ", cleanDisabled=" + this.cleanDisabled
+            + ", existingSchemaStrategy=" + this.existingSchemaStrategy
+            + ", baselineVersion=" + this.baselineVersion
+            + ", baselineDescription=" + this.baselineDescription
             + ", placeholders=" + this.placeholders
             + ']';
     }
@@ -79,6 +109,9 @@ public final class MigrationConfig {
         private boolean baselineOnMigrate;
         private boolean validateOnMigrate = true;
         private boolean cleanDisabled = true;
+        private ExistingSchemaStrategy existingSchemaStrategy = ExistingSchemaStrategy.FAIL;
+        private String baselineVersion = "0";
+        private String baselineDescription = "CraftKit baseline";
         private final Map<String, String> placeholders = new LinkedHashMap<>();
 
         public Builder enabled(final boolean enabled) {
@@ -117,6 +150,21 @@ public final class MigrationConfig {
             return this;
         }
 
+        public Builder existingSchemaStrategy(final ExistingSchemaStrategy existingSchemaStrategy) {
+            this.existingSchemaStrategy = existingSchemaStrategy;
+            return this;
+        }
+
+        public Builder baselineVersion(final String baselineVersion) {
+            this.baselineVersion = baselineVersion;
+            return this;
+        }
+
+        public Builder baselineDescription(final String baselineDescription) {
+            this.baselineDescription = baselineDescription;
+            return this;
+        }
+
         public Builder placeholders(final Map<String, String> placeholders) {
             this.placeholders.clear();
             this.placeholders.putAll(Objects.requireNonNull(placeholders, "Migration placeholders must not be null."));
@@ -145,14 +193,31 @@ public final class MigrationConfig {
                 validatedPlaceholders.put(key, value);
             }
 
+            final ExistingSchemaStrategy resolvedStrategy = Objects.requireNonNull(this.existingSchemaStrategy, "Existing schema strategy must not be null.");
+            final String resolvedBaselineVersion = requireNonBlank(this.baselineVersion, "Migration baseline version must not be blank.");
+            final String resolvedBaselineDescription = requireNonBlank(this.baselineDescription, "Migration baseline description must not be blank.");
+            validateBaselineVersion(resolvedBaselineVersion);
+
             return new MigrationConfig(
                 this.enabled,
                 List.copyOf(validatedLocations),
                 this.baselineOnMigrate,
                 this.validateOnMigrate,
                 this.cleanDisabled,
+                resolvedStrategy,
+                resolvedBaselineVersion,
+                resolvedBaselineDescription,
                 Map.copyOf(validatedPlaceholders)
             );
+        }
+
+        private static void validateBaselineVersion(final String baselineVersion) {
+            for (int index = 0; index < baselineVersion.length(); index++) {
+                final char character = baselineVersion.charAt(index);
+                if (!Character.isDigit(character) && character != '.') {
+                    throw new DatabaseException("Migration baseline version may contain only digits and dots.");
+                }
+            }
         }
 
         private static String requireNonBlank(final String value, final String message) {

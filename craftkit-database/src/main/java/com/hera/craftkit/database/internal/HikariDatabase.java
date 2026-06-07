@@ -5,7 +5,9 @@ import com.hera.craftkit.database.DatabaseException;
 import com.hera.craftkit.database.ExecutorConfig;
 import com.hera.craftkit.database.SqlOperation;
 import com.hera.craftkit.database.SqlQuery;
+import com.hera.craftkit.database.SqlTransaction;
 import com.hera.craftkit.database.SqlUpdate;
+import com.hera.craftkit.database.TransactionOptions;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -94,6 +96,18 @@ public final class HikariDatabase implements Database {
     }
 
     @Override
+    public <T> CompletableFuture<T> transaction(final SqlTransaction<T> transaction) {
+        return this.transaction(TransactionOptions.defaults(), transaction);
+    }
+
+    @Override
+    public <T> CompletableFuture<T> transaction(final TransactionOptions options, final SqlTransaction<T> transaction) {
+        final TransactionOptions resolvedOptions = Objects.requireNonNull(options, "Transaction options must not be null.");
+        final SqlTransaction<T> resolvedTransaction = Objects.requireNonNull(transaction, "Transaction must not be null.");
+        return this.submit("transaction", () -> this.executeTransaction(resolvedOptions, resolvedTransaction));
+    }
+
+    @Override
     public DataSource dataSource() {
         this.ensureOpen("access the database datasource");
         return this.dataSource;
@@ -168,6 +182,98 @@ public final class HikariDatabase implements Database {
             future.completeExceptionally(new DatabaseException("Failed to schedule database " + operation + " because the executor is not accepting new tasks.", exception));
         }
         return future;
+    }
+
+    private <T> T executeTransaction(final TransactionOptions options, final SqlTransaction<T> transaction) {
+        try (var connection = this.dataSource.getConnection()) {
+            final boolean previousAutoCommit = connection.getAutoCommit();
+            final boolean previousReadOnly = connection.isReadOnly();
+            final int previousIsolation = connection.getTransactionIsolation();
+            Throwable failure = null;
+
+            try {
+                if (options.isolation().shouldApply() && previousIsolation != options.isolation().jdbcLevel()) {
+                    connection.setTransactionIsolation(options.isolation().jdbcLevel());
+                }
+                if (previousReadOnly != options.readOnly()) {
+                    connection.setReadOnly(options.readOnly());
+                }
+                connection.setAutoCommit(false);
+
+                final T result = transaction.execute(connection);
+                connection.commit();
+                return result;
+            } catch (final Throwable exception) {
+                failure = exception;
+                rollback(connection, failure);
+                throw wrapTransactionFailure(failure);
+            } finally {
+                restoreConnectionState(connection, previousAutoCommit, previousReadOnly, previousIsolation, failure);
+            }
+        } catch (final SQLException exception) {
+            throw new DatabaseException("Failed to execute database transaction.", exception);
+        }
+    }
+
+    private static void rollback(final java.sql.Connection connection, final Throwable failure) {
+        try {
+            connection.rollback();
+        } catch (final SQLException rollbackFailure) {
+            failure.addSuppressed(rollbackFailure);
+        }
+    }
+
+    private static void restoreConnectionState(
+        final java.sql.Connection connection,
+        final boolean previousAutoCommit,
+        final boolean previousReadOnly,
+        final int previousIsolation,
+        final Throwable originalFailure
+    ) {
+        DatabaseException restoreFailure = null;
+        try {
+            connection.setAutoCommit(previousAutoCommit);
+        } catch (final SQLException exception) {
+            restoreFailure = new DatabaseException("Failed to restore transaction auto-commit state.", exception);
+        }
+        try {
+            if (connection.isReadOnly() != previousReadOnly) {
+                connection.setReadOnly(previousReadOnly);
+            }
+        } catch (final SQLException exception) {
+            restoreFailure = appendRestoreFailure(restoreFailure, "Failed to restore transaction read-only state.", exception);
+        }
+        try {
+            if (connection.getTransactionIsolation() != previousIsolation) {
+                connection.setTransactionIsolation(previousIsolation);
+            }
+        } catch (final SQLException exception) {
+            restoreFailure = appendRestoreFailure(restoreFailure, "Failed to restore transaction isolation state.", exception);
+        }
+
+        if (restoreFailure != null) {
+            if (originalFailure != null) {
+                originalFailure.addSuppressed(restoreFailure);
+                return;
+            }
+            throw restoreFailure;
+        }
+    }
+
+    private static DatabaseException appendRestoreFailure(final DatabaseException existing, final String message, final SQLException exception) {
+        final DatabaseException failure = new DatabaseException(message, exception);
+        if (existing == null) {
+            return failure;
+        }
+        existing.addSuppressed(failure);
+        return existing;
+    }
+
+    private static RuntimeException wrapTransactionFailure(final Throwable failure) {
+        if (failure instanceof RuntimeException runtimeException) {
+            return runtimeException;
+        }
+        return new DatabaseException("Failed to execute database transaction.", failure);
     }
 
     private void ensureOpen(final String operation) {
