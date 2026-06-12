@@ -5,4 +5,5 @@ include(
     "craftkit-logging",
     "craftkit-database",
     "craftkit-redis",
+    "craftkit-zmenu",
 )

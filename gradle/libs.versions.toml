@@ -5,6 +5,7 @@ hikari = "7.0.2"
 mysql = "9.7.0"
 lettuce = "7.6.0.RELEASE"
 flyway = "12.8.1"
+zmenu = "1.1.1.4"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -16,3 +17,4 @@ mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
+zmenu-api = { module = "fr.maxlego08.menu:zmenu-api", version.ref = "zmenu" }
