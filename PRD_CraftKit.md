@@ -153,16 +153,6 @@ craftkit-logging
 craftkit-database
 craftkit-redis
 ```
-
-No se crearán inicialmente:
-
-```text
-craftkit-config
-craftkit-command
-craftkit-scoreboard
-craftkit-menu
-```
-
 ---
 
 ## 7. Módulo `craftkit-paper`
@@ -238,51 +228,6 @@ Redis en HERA se usará para comunicación crítica entre servidores:
 - sincronización de estado ligero.
 
 Si cada plugin usa Redis directo, se duplican convenciones de canales, serialización, reconexión y manejo de errores.
-
----
-
-## 11. Librerías que se usarán directamente en plugins consumidores
-
-Estas librerías no tendrán módulo CraftKit inicial porque, por ahora, CraftKit no aportaría suficiente valor encima.
-
-### BoostedYAML
-
-Uso directo para configuración.
-
-Motivo:
-
-- la librería ya resuelve el problema;
-- no queremos replicar toda su API;
-- un wrapper fino aportaría poco al inicio.
-
-### Cloud
-
-Uso directo para comandos.
-
-Motivo:
-
-- Cloud ya es el framework de comandos;
-- no se debe crear “Cloud pero nuestro”;
-- solo tendría sentido un módulo futuro si HERA define parsers, errores, permisos y mensajes comunes.
-
-### scoreboard-library
-
-Uso directo para scoreboards.
-
-Motivo:
-
-- todavía no hay convención visual fuerte de HERA;
-- un módulo solo tendría sentido si se crean helpers oficiales de sidebar, temas, refresh y layouts.
-
-### zMenu
-
-Debe tratarse como plugin externo instalado en `/plugins`.
-
-Motivo:
-
-- zMenu es principalmente un plugin con API;
-- no se debe shadeíar dentro de CraftKit;
-- si se necesita integración, se creará un módulo tipo `craftkit-zmenu` o `craftkit-menu-zmenu`.
 
 ---
 
@@ -379,9 +324,6 @@ dependencies {
     implementation("com.hera.craftkit:craftkit-logging:$craftkitVersion")
     implementation("com.hera.craftkit:craftkit-database:$craftkitVersion")
     implementation("com.hera.craftkit:craftkit-redis:$craftkitVersion")
-
-    implementation("dev.dejvokep:boosted-yaml:<version>")
-    implementation("org.incendo:cloud-paper:<version>")
 }
 ```
 
