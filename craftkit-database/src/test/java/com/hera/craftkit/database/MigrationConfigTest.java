@@ -20,6 +20,19 @@ final class MigrationConfigTest {
         assertEquals(ExistingSchemaStrategy.FAIL, config.existingSchemaStrategy());
         assertEquals("0", config.baselineVersion());
         assertEquals("CraftKit baseline", config.baselineDescription());
+        assertTrue(config.classLoader() != null);
+    }
+
+    @Test
+    void acceptsExplicitMigrationClassLoader() {
+        final ClassLoader classLoader = new ClassLoader(null) {
+        };
+
+        final MigrationConfig config = MigrationConfig.builder()
+            .classLoader(classLoader)
+            .build();
+
+        assertEquals(classLoader, config.classLoader());
     }
 
     @Test

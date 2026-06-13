@@ -4,9 +4,14 @@ Este documento muestra el flujo mínimo recomendado para un plugin consumidor.
 
 ## Crear la configuración
 
-Para una base compartida por varios plugins de HERA, usar `MigrationConfig.sharedDatabaseDefaults()`.
+Para una base compartida por varios plugins de HERA, usar la misma estrategia que `MigrationConfig.sharedDatabaseDefaults()` y pasar el `ClassLoader` del plugin consumidor para que Flyway encuentre migraciones `classpath:` dentro del JAR del plugin.
 
 ```java
+MigrationConfig migration = MigrationConfig.builder()
+    .existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)
+    .classLoader(getClass().getClassLoader())
+    .build();
+
 DatabaseConfig config = DatabaseConfig.builder()
     .host("127.0.0.1")
     .port(3306)
@@ -14,7 +19,7 @@ DatabaseConfig config = DatabaseConfig.builder()
     .username("survival")
     .password("secret")
     .tablePrefix("survival_")
-    .migration(MigrationConfig.sharedDatabaseDefaults())
+    .migration(migration)
     .build();
 ```
 

@@ -36,6 +36,20 @@ final class FlywayMigratorTest {
     }
 
     @Test
+    void migratorUsesConfiguredMigrationClassLoader() {
+        final ClassLoader classLoader = new ClassLoader(null) {
+        };
+        final MigrationConfig config = MigrationConfig.builder()
+            .classLoader(classLoader)
+            .build();
+
+        final FlywayMigrator migrator = new FlywayMigrator(new FailingDataSource(), config, "ck_");
+
+        assertEquals(classLoader, migrator.classLoader());
+        assertEquals(classLoader, migrator.createFlyway().getConfiguration().getClassLoader());
+    }
+
+    @Test
     void failStrategyDoesNotBaselineByDefault() {
         final FlywayMigrator migrator = new FlywayMigrator(new FailingDataSource(), MigrationConfig.builder().build(), "ck_");
 

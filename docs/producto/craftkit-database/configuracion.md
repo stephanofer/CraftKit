@@ -7,6 +7,11 @@ La configuración se construye con builders inmutables. Si una configuración in
 Config raíz para crear una conexión MySQL.
 
 ```java
+MigrationConfig migration = MigrationConfig.builder()
+    .existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)
+    .classLoader(getClass().getClassLoader())
+    .build();
+
 DatabaseConfig config = DatabaseConfig.builder()
     .host("127.0.0.1")
     .port(3306)
@@ -16,7 +21,7 @@ DatabaseConfig config = DatabaseConfig.builder()
     .tablePrefix("survival_")
     .pool(PoolConfig.builder().maximumPoolSize(8).build())
     .executor(ExecutorConfig.builder().threadNamePrefix("survival-db"))
-    .migration(MigrationConfig.sharedDatabaseDefaults())
+    .migration(migration)
     .putJdbcProperty("socketTimeout", "4000")
     .build();
 ```
@@ -37,6 +42,8 @@ DatabaseConfig config = DatabaseConfig.builder()
 | `jdbcProperties` | vacío | Keys no vacías; values no `null`. |
 
 `DatabaseConfig.toString()` oculta la contraseña como `password=<hidden>`.
+
+> Nota: `MigrationConfig.sharedDatabaseDefaults()` devuelve una configuración final. Si el plugin consumidor necesita migraciones `classpath:` desde su propio JAR, construya el `MigrationConfig` con `classLoader(getClass().getClassLoader())` y aplique también `existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)` cuando use base compartida.
 
 ## `PoolConfig`
 

@@ -155,6 +155,7 @@ baselineVersion(String)
 baselineDescription(String)
 placeholders(Map<String, String>)
 putPlaceholder(String, String)
+classLoader(ClassLoader)
 build()
 ```
 

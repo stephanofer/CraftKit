@@ -35,7 +35,7 @@ Internamente:
 1. Valida `DatabaseConfig`.
 2. Crea un `ExecutorService` con `DatabaseExecutors.createExecutor(config.executor())`.
 3. Crea un `HikariDataSource` con `HikariDataSources.create(config)`.
-4. Crea `FlywayMigrator` usando el datasource, `MigrationConfig` y `tablePrefix`.
+4. Crea `FlywayMigrator` usando el datasource, `MigrationConfig`, `tablePrefix` y el `ClassLoader` configurado para resolver migraciones `classpath:`.
 5. Devuelve `HikariDatabase`.
 
 Si falla la creación del datasource o de la instancia, el código intenta cerrar los recursos ya creados y agrega fallos de cierre como `suppressed`.

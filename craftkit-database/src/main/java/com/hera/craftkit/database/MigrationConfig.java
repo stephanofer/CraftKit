@@ -19,6 +19,7 @@ public final class MigrationConfig {
     private final String baselineVersion;
     private final String baselineDescription;
     private final Map<String, String> placeholders;
+    private final ClassLoader classLoader;
 
     private MigrationConfig(
         final boolean enabled,
@@ -29,7 +30,8 @@ public final class MigrationConfig {
         final ExistingSchemaStrategy existingSchemaStrategy,
         final String baselineVersion,
         final String baselineDescription,
-        final Map<String, String> placeholders
+        final Map<String, String> placeholders,
+        final ClassLoader classLoader
     ) {
         this.enabled = enabled;
         this.locations = locations;
@@ -40,6 +42,7 @@ public final class MigrationConfig {
         this.baselineVersion = baselineVersion;
         this.baselineDescription = baselineDescription;
         this.placeholders = placeholders;
+        this.classLoader = classLoader;
     }
 
     public static Builder builder() {
@@ -88,6 +91,10 @@ public final class MigrationConfig {
         return this.placeholders;
     }
 
+    public ClassLoader classLoader() {
+        return this.classLoader;
+    }
+
     @Override
     public String toString() {
         return "MigrationConfig[enabled=" + this.enabled
@@ -99,6 +106,7 @@ public final class MigrationConfig {
             + ", baselineVersion=" + this.baselineVersion
             + ", baselineDescription=" + this.baselineDescription
             + ", placeholders=" + this.placeholders
+            + ", classLoader=" + this.classLoader
             + ']';
     }
 
@@ -113,6 +121,7 @@ public final class MigrationConfig {
         private String baselineVersion = "0";
         private String baselineDescription = "CraftKit baseline";
         private final Map<String, String> placeholders = new LinkedHashMap<>();
+        private ClassLoader classLoader;
 
         public Builder enabled(final boolean enabled) {
             this.enabled = enabled;
@@ -176,6 +185,11 @@ public final class MigrationConfig {
             return this;
         }
 
+        public Builder classLoader(final ClassLoader classLoader) {
+            this.classLoader = Objects.requireNonNull(classLoader, "Migration class loader must not be null.");
+            return this;
+        }
+
         public MigrationConfig build() {
             final List<String> validatedLocations = new ArrayList<>(this.locations.size());
             for (final String location : this.locations) {
@@ -196,6 +210,7 @@ public final class MigrationConfig {
             final ExistingSchemaStrategy resolvedStrategy = Objects.requireNonNull(this.existingSchemaStrategy, "Existing schema strategy must not be null.");
             final String resolvedBaselineVersion = requireNonBlank(this.baselineVersion, "Migration baseline version must not be blank.");
             final String resolvedBaselineDescription = requireNonBlank(this.baselineDescription, "Migration baseline description must not be blank.");
+            final ClassLoader resolvedClassLoader = this.classLoader != null ? this.classLoader : defaultClassLoader();
             validateBaselineVersion(resolvedBaselineVersion);
 
             return new MigrationConfig(
@@ -207,8 +222,17 @@ public final class MigrationConfig {
                 resolvedStrategy,
                 resolvedBaselineVersion,
                 resolvedBaselineDescription,
-                Map.copyOf(validatedPlaceholders)
+                Map.copyOf(validatedPlaceholders),
+                resolvedClassLoader
             );
+        }
+
+        private static ClassLoader defaultClassLoader() {
+            final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if (contextClassLoader != null) {
+                return contextClassLoader;
+            }
+            return MigrationConfig.class.getClassLoader();
         }
 
         private static void validateBaselineVersion(final String baselineVersion) {

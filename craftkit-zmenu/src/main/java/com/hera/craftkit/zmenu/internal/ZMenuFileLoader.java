@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public final class ZMenuFileLoader {
@@ -57,37 +59,80 @@ public final class ZMenuFileLoader {
     }
 
     private void loadDefaultResources() {
-        this.plan.defaultActionPatterns().forEach(path -> this.loadDefault(path, "action pattern", false, this::loadActionPattern));
-        this.plan.defaultPatterns().forEach(path -> this.loadDefault(path, "pattern", false, this::loadPattern));
-        this.plan.defaultInventories().forEach(path -> this.loadDefault(path, "inventory", true, this::loadInventory));
+        this.loadDefaults(this.plan.defaultActionPatterns(), this.plan.actionPatternsFolder(), "action pattern", false, this::loadActionPattern);
+        this.loadDefaults(this.plan.defaultPatterns(), this.plan.patternsFolder(), "pattern", false, this::loadPattern);
+        this.loadDefaults(this.plan.defaultInventories(), this.plan.inventoriesFolder(), "inventory", true, this::loadInventory);
         if (this.integration.dialogs().isPresent()) {
-            this.plan.defaultDialogs().forEach(path -> this.loadDefault(path, "dialog", false, this::loadDialog));
+            this.loadDefaults(this.plan.defaultDialogs(), this.plan.dialogsFolder(), "dialog", false, this::loadDialog);
         }
         if (this.integration.bedrock().isPresent()) {
-            this.plan.defaultBedrock().forEach(path -> this.loadDefault(path, "bedrock", false, this::loadBedrock));
+            this.loadDefaults(this.plan.defaultBedrock(), this.plan.bedrockFolder(), "bedrock", false, this::loadBedrock);
         }
     }
 
-    private void loadDefault(String resourcePath, String category, boolean inventoryDefault, Consumer<File> loader) {
+    private void loadDefaults(List<String> resourcePaths, String scannedFolder, String category, boolean inventoryDefault, Consumer<File> loader) {
+        Set<String> distinctResourcePaths = new LinkedHashSet<>();
+        for (String resourcePath : resourcePaths) {
+            distinctResourcePaths.add(normalizeResourcePath(resourcePath));
+        }
+        distinctResourcePaths.forEach(path -> this.loadDefault(path, scannedFolder, category, inventoryDefault, loader));
+    }
+
+    private void loadDefault(String resourcePath, String scannedFolder, String category, boolean inventoryDefault, Consumer<File> loader) {
+        String normalizedResourcePath = normalizeResourcePath(resourcePath);
+        if (isCoveredByDirectory(normalizedResourcePath, scannedFolder)) {
+            this.saveDefaultResource(normalizedResourcePath, category);
+            return;
+        }
+
         if (inventoryDefault) {
             try {
-                Inventory inventory = this.integration.inventories().loadInventoryOrSaveResource(this.plugin, resourcePath);
+                Inventory inventory = this.integration.inventories().loadInventoryOrSaveResource(this.plugin, normalizedResourcePath);
                 this.tracker.trackInventory(inventory);
                 return;
             } catch (Exception exception) {
-                throw new ZMenuException("Failed to load default zMenu inventory resource '" + resourcePath + "' for plugin '" + this.plugin.getName() + "'", exception);
+                throw new ZMenuException("Failed to load default zMenu inventory resource '" + normalizedResourcePath + "' for plugin '" + this.plugin.getName() + "'", exception);
             }
         }
 
-        File file = new File(this.plugin.getDataFolder(), resourcePath);
-        if (!file.exists()) {
-            try {
-                this.plugin.saveResource(resourcePath, false);
-            } catch (IllegalArgumentException exception) {
-                throw new ZMenuException("Missing declared default zMenu " + category + " resource '" + resourcePath + "' for plugin '" + this.plugin.getName() + "'", exception);
-            }
-        }
+        File file = this.saveDefaultResource(normalizedResourcePath, category);
         loader.accept(file);
+    }
+
+    private File saveDefaultResource(String resourcePath, String category) {
+        File file = new File(this.plugin.getDataFolder(), resourcePath);
+        if (file.exists()) {
+            return file;
+        }
+        try {
+            this.plugin.saveResource(resourcePath, false);
+            return file;
+        } catch (IllegalArgumentException exception) {
+            throw new ZMenuException("Missing declared default zMenu " + category + " resource '" + resourcePath + "' for plugin '" + this.plugin.getName() + "'", exception);
+        }
+    }
+
+    static boolean isCoveredByDirectory(String resourcePath, String folder) {
+        if (folder == null || folder.isBlank()) {
+            return false;
+        }
+        String normalizedResourcePath = normalizeResourcePath(resourcePath);
+        String normalizedFolder = normalizeResourcePath(folder);
+        while (normalizedFolder.endsWith("/")) {
+            normalizedFolder = normalizedFolder.substring(0, normalizedFolder.length() - 1);
+        }
+        if (normalizedFolder.isEmpty()) {
+            return false;
+        }
+        return normalizedResourcePath.startsWith(normalizedFolder + "/");
+    }
+
+    private static String normalizeResourcePath(String path) {
+        String normalized = path.replace('\\', '/');
+        while (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+        return normalized;
     }
 
     private void loadDirectory(String folder, String category, Consumer<File> loader) {

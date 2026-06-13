@@ -175,27 +175,37 @@ inventoryManager.registerInventoryOption(plugin, optionClass);
 
 ### `defaultInventories(...)`
 
-Carga inventarios default explícitos usando:
+Copia y carga inventarios default explícitos usando:
 
 ```java
 inventoryManager.loadInventoryOrSaveResource(plugin, path);
 ```
 
+Si el path está cubierto por `inventories(folder)`, CraftKit solo copia el recurso si falta y deja que el escaneo de carpeta lo cargue una única vez.
+
 ### `defaultPatterns(...)`
 
 Copia el recurso si no existe y carga cada pattern.
+
+Si el path está cubierto por `patterns(folder)`, solo se copia; el folder scan lo carga una vez.
 
 ### `defaultActionPatterns(...)`
 
 Copia el recurso si no existe y carga cada action pattern.
 
+Si el path está cubierto por `actionPatterns(folder)`, solo se copia; el folder scan lo carga una vez.
+
 ### `defaultDialogs(...)`
 
 Copia y carga dialogs solo si existe `DialogManager`.
 
+Si el path está cubierto por `dialogs(folder)`, solo se copia; el folder scan lo carga una vez.
+
 ### `defaultBedrock(...)`
 
 Copia y carga bedrock inventories solo si existe `BedrockManager`.
+
+Si el path está cubierto por `bedrock(folder)`, solo se copia; el folder scan lo carga una vez.
 
 ### `inventories(folder)`
 

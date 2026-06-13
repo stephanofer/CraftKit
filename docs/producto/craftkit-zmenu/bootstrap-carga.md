@@ -109,6 +109,8 @@ Ejemplo:
 .defaultInventories("inventories/main.yml")
 ```
 
+Cuando un default no está cubierto por una carpeta declarada para escaneo, CraftKit lo copia y lo carga en la etapa de defaults.
+
 Para inventories, CraftKit usa el método real de zMenu:
 
 ```java
@@ -128,6 +130,27 @@ if (!file.exists()) {
 y después carga el archivo con el manager real de zMenu.
 
 Los defaults no sobrescriben archivos existentes.
+
+### Defaults cubiertos por carpetas escaneadas
+
+Si un default explícito está dentro de una carpeta que también se escanea, CraftKit evita cargarlo dos veces.
+
+Ejemplo:
+
+```java
+.defaultInventories("inventories/language.yml")
+.inventories("inventories")
+```
+
+En este caso CraftKit:
+
+1. copia `inventories/language.yml` si falta en el `dataFolder`;
+2. no lo carga durante la etapa de defaults;
+3. lo carga una sola vez durante el escaneo de `inventories`.
+
+La misma regla aplica a `defaultPatterns`, `defaultActionPatterns`, `defaultDialogs` y `defaultBedrock` cuando sus paths están cubiertos por `patterns`, `actionPatterns`, `dialogs` o `bedrock`.
+
+Los paths repetidos dentro de la misma categoría de defaults se normalizan y se procesan una sola vez.
 
 ## Carga de carpetas
 

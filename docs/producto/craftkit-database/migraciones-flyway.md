@@ -86,6 +86,16 @@ Esto permite que varios plugins compartan una misma base de datos sin usar la mi
 | `baselineVersion` | `0` | Versión baseline para `BASELINE_AT_VERSION`; `BASELINE_AT_ZERO` fuerza `0`. |
 | `baselineDescription` | `CraftKit baseline` | Descripción baseline de Flyway. |
 | `placeholders` | vacío | Placeholders extra del consumidor. |
+| `classLoader` | context classloader actual | ClassLoader usado por Flyway para resolver migraciones `classpath:`. En Paper, el plugin consumidor debe pasar su propio classloader si las migraciones viven dentro de su JAR. |
+
+En plugins Paper, configure explícitamente el classloader del plugin consumidor para que Flyway pueda resolver `src/main/resources/db/migration/` desde ese JAR:
+
+```java
+MigrationConfig migration = MigrationConfig.builder()
+    .existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)
+    .classLoader(getClass().getClassLoader())
+    .build();
+```
 
 ## Estrategias para schemas existentes
 

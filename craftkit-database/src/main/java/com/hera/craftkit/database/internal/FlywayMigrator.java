@@ -19,11 +19,21 @@ public final class FlywayMigrator implements DatabaseMigrator {
     private final DataSource dataSource;
     private final MigrationConfig config;
     private final String tablePrefix;
+    private final ClassLoader classLoader;
 
     public FlywayMigrator(final DataSource dataSource, final MigrationConfig config, final String tablePrefix) {
+        this(dataSource, config, tablePrefix, migrationClassLoader(config));
+    }
+
+    public FlywayMigrator(final DataSource dataSource, final MigrationConfig config, final String tablePrefix, final ClassLoader classLoader) {
         this.dataSource = Objects.requireNonNull(dataSource, "DataSource must not be null.");
         this.config = Objects.requireNonNull(config, "Migration config must not be null.");
         this.tablePrefix = TablePrefixes.validatePrefix(Objects.requireNonNull(tablePrefix, "Table prefix must not be null."));
+        this.classLoader = Objects.requireNonNull(classLoader, "Migration class loader must not be null.");
+    }
+
+    private static ClassLoader migrationClassLoader(final MigrationConfig config) {
+        return Objects.requireNonNull(config, "Migration config must not be null.").classLoader();
     }
 
     public boolean isEnabled() {
@@ -52,6 +62,10 @@ public final class FlywayMigrator implements DatabaseMigrator {
         return Map.copyOf(placeholders);
     }
 
+    ClassLoader classLoader() {
+        return this.classLoader;
+    }
+
     String historyTable() {
         return TablePrefixes.table(this.tablePrefix, FLYWAY_HISTORY_TABLE_NAME);
     }
@@ -68,7 +82,7 @@ public final class FlywayMigrator implements DatabaseMigrator {
     }
 
     Flyway createFlyway() {
-        return Flyway.configure()
+        return Flyway.configure(this.classLoader)
             .dataSource(this.dataSource)
             .locations(this.config.locations().toArray(String[]::new))
             .baselineOnMigrate(this.baselineOnMigrate())
