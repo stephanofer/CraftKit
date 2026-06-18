@@ -100,6 +100,7 @@ RedisConfig.DEFAULT_COMPUTATION_THREADS
 ```java
 public interface RedisCache {
     CompletableFuture<String> get(String key);
+    CompletableFuture<Map<String, String>> getMany(Collection<String> keys);
     CompletableFuture<Boolean> set(String key, String value, Duration ttl);
     CompletableFuture<Boolean> setIfAbsent(String key, String value, Duration ttl);
     CompletableFuture<Boolean> expire(String key, Duration ttl);
@@ -112,6 +113,7 @@ public interface RedisCache {
 Notas:
 
 - `get(...)` puede completar con `null` si Redis no tiene la key.
+- `getMany(...)` usa `MGET`, deduplica keys, devuelve un `Map` no modificable y omite keys faltantes.
 - `set(...)` y `setIfAbsent(...)` requieren TTL positivo.
 - `ttl(...)` devuelve `Duration.ZERO` para key faltante o sin expiración.
 

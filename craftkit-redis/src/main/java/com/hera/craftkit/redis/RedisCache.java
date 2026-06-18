@@ -1,11 +1,15 @@
 package com.hera.craftkit.redis;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public interface RedisCache {
 
     CompletableFuture<String> get(String key);
+
+    CompletableFuture<Map<String, String>> getMany(Collection<String> keys);
 
     CompletableFuture<Boolean> set(String key, String value, Duration ttl);
 

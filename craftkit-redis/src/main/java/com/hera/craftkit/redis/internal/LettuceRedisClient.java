@@ -12,6 +12,7 @@ import com.hera.craftkit.redis.RedisState;
 import com.hera.craftkit.redis.RedisSubscriber;
 import com.hera.craftkit.redis.RedisSubscription;
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScriptOutputType;
@@ -26,6 +27,12 @@ import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.Delay;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -131,6 +138,11 @@ public final class LettuceRedisClient implements RedisClient, RedisCache, RedisS
     public CompletableFuture<String> get(final String key) {
         final String resolvedKey = RedisNames.validateKey(key);
         return command("get", commands -> commands.get(resolvedKey));
+    }
+
+    @Override
+    public CompletableFuture<Map<String, String>> getMany(final Collection<String> keys) {
+        return getMany(keys, resolvedKeys -> command("mget", commands -> commands.mget(resolvedKeys)));
     }
 
     @Override
@@ -327,6 +339,32 @@ public final class LettuceRedisClient implements RedisClient, RedisCache, RedisS
                 ? exception
                 : new RedisException("Failed to execute Redis " + operation + '.', exception));
         }
+    }
+
+    static CompletableFuture<Map<String, String>> getMany(
+        final Collection<String> keys,
+        final Function<String[], CompletableFuture<List<KeyValue<String, String>>>> mget
+    ) {
+        Objects.requireNonNull(keys, "Redis keys must not be null.");
+        final LinkedHashSet<String> resolvedKeys = new LinkedHashSet<>(keys.size());
+        for (final String key : keys) {
+            resolvedKeys.add(RedisNames.validateKey(key));
+        }
+        if (resolvedKeys.isEmpty()) {
+            return CompletableFuture.completedFuture(Map.of());
+        }
+        return mget.apply(resolvedKeys.toArray(String[]::new))
+            .thenApply(LettuceRedisClient::toMgetResultMap);
+    }
+
+    static Map<String, String> toMgetResultMap(final List<KeyValue<String, String>> values) {
+        final LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        for (final KeyValue<String, String> value : values) {
+            if (value.hasValue()) {
+                result.put(value.getKey(), value.getValue());
+            }
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     private void ensureOpen() {

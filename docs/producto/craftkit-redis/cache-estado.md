@@ -30,6 +30,32 @@ cache.get(key).thenAccept(value -> {
 });
 ```
 
+### `getMany(Collection<String> keys)`
+
+Lee varias keys en una sola operación Redis usando `MGET`.
+
+```java
+CompletableFuture<Map<String, String>> future = cache.getMany(playerStateKeys);
+```
+
+Comportamiento:
+
+- si la colección está vacía, devuelve un `Map` vacío y no consulta Redis;
+- valida cada key con las mismas reglas de `get(...)`;
+- deduplica keys repetidas antes de consultar Redis;
+- ejecuta una única operación `MGET`;
+- devuelve un `Map` no modificable con el orden de la primera aparición de cada key;
+- solo incluye keys encontradas; las keys faltantes no aparecen en el `Map`.
+
+```java
+cache.getMany(playerStateKeys).thenAccept(states -> {
+    String state = states.get(playerKey);
+    boolean missing = !states.containsKey(playerKey);
+});
+```
+
+No usa `Optional` por key. El consumidor ya conoce la lista original y puede distinguir faltantes con `containsKey(...)` sin agregar más allocations ni complejidad a la API.
+
 ### `set(String key, String value, Duration ttl)`
 
 Guarda un valor con TTL obligatorio.
