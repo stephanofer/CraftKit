@@ -6,6 +6,8 @@ mysql = "9.7.0"
 lettuce = "7.6.0.RELEASE"
 flyway = "12.8.1"
 zmenu = "1.1.1.4"
+boosted-yaml = "1.3.7"
+networkplayersettings = "1.0.0-SNAPSHOT"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -18,3 +20,5 @@ lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
 zmenu-api = { module = "fr.maxlego08.menu:zmenu-api", version.ref = "zmenu" }
+boosted-yaml = { module = "dev.dejvokep:boosted-yaml", version.ref = "boosted-yaml" }
+networkplayersettings = { module = "com.stephanofer:networkplayersettings", version.ref = "networkplayersettings" }

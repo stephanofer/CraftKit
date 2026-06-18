@@ -22,6 +22,7 @@ DatabaseConfig config = DatabaseConfig.builder()
     .pool(PoolConfig.builder().maximumPoolSize(8).build())
     .executor(ExecutorConfig.builder().threadNamePrefix("survival-db"))
     .migration(migration)
+    .driverClassName("org.mariadb.jdbc.Driver") // opcional: override avanzado
     .putJdbcProperty("socketTimeout", "4000")
     .build();
 ```
@@ -39,9 +40,12 @@ DatabaseConfig config = DatabaseConfig.builder()
 | `pool` | `PoolConfig.builder().build()` | Config Hikari. |
 | `executor` | derivado de `PoolConfig` | Si no se define, usa `maximumPoolSize` como cantidad de threads. |
 | `migration` | `MigrationConfig.builder().build()` | Config Flyway. |
+| `driverClassName` | `com.mysql.cj.jdbc.Driver` para MySQL | Override avanzado opcional; si se deja vacío o `null`, CraftKit usa el driver MySQL oficial. |
 | `jdbcProperties` | vacío | Keys no vacías; values no `null`. |
 
 `DatabaseConfig.toString()` oculta la contraseña como `password=<hidden>`.
+
+CraftKit configura explícitamente el driver MySQL en Hikari en vez de depender solo de autodiscovery JDBC. Esto evita fallos por classloaders en runtimes como Velocity, donde el driver puede estar dentro del JAR del plugin pero no ser visible para `DriverManager`. Si un consumidor necesita MariaDB, un driver fork o un setup de classloader especial, puede definir `driverClassName(...)`.
 
 > Nota: `MigrationConfig.sharedDatabaseDefaults()` devuelve una configuración final. Si el plugin consumidor necesita migraciones `classpath:` desde su propio JAR, construya el `MigrationConfig` con `classLoader(getClass().getClassLoader())` y aplique también `existingSchemaStrategy(ExistingSchemaStrategy.BASELINE_AT_ZERO)` cuando use base compartida.
 
@@ -97,3 +101,5 @@ jdbc:mysql://<host>:<port>/<database>
 ```
 
 El `HikariConfig` actual usa `initializationFailTimeout = -1`. Esto permite crear el datasource sin exigir una conexión inmediata; errores de conectividad pueden aparecer al ejecutar operaciones o migraciones.
+
+Durante la creación del datasource, CraftKit registra un diagnóstico seguro con el pool, destino `host:port/database`, driver configurado/resuelto, clase cargada, classloader y versión disponible. No se registra la contraseña ni la URL completa con query params.

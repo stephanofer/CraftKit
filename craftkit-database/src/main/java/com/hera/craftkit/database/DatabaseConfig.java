@@ -19,6 +19,7 @@ public final class DatabaseConfig {
     private final PoolConfig pool;
     private final ExecutorConfig executor;
     private final MigrationConfig migration;
+    private final String driverClassName;
     private final Map<String, String> jdbcProperties;
 
     private DatabaseConfig(
@@ -31,6 +32,7 @@ public final class DatabaseConfig {
         final PoolConfig pool,
         final ExecutorConfig executor,
         final MigrationConfig migration,
+        final String driverClassName,
         final Map<String, String> jdbcProperties
     ) {
         this.host = host;
@@ -42,6 +44,7 @@ public final class DatabaseConfig {
         this.pool = pool;
         this.executor = executor;
         this.migration = migration;
+        this.driverClassName = driverClassName;
         this.jdbcProperties = jdbcProperties;
     }
 
@@ -85,6 +88,10 @@ public final class DatabaseConfig {
         return this.migration;
     }
 
+    public String driverClassName() {
+        return this.driverClassName;
+    }
+
     public Map<String, String> jdbcProperties() {
         return this.jdbcProperties;
     }
@@ -100,6 +107,7 @@ public final class DatabaseConfig {
             + ", pool=" + this.pool
             + ", executor=" + this.executor
             + ", migration=" + this.migration
+            + ", driverClassName=" + this.driverClassName
             + ", jdbcProperties=" + this.jdbcProperties
             + ']';
     }
@@ -116,6 +124,7 @@ public final class DatabaseConfig {
         private ExecutorConfig.Builder executorBuilder = ExecutorConfig.builder();
         private ExecutorConfig executor;
         private MigrationConfig migration = MigrationConfig.builder().build();
+        private String driverClassName;
         private final Map<String, String> jdbcProperties = new LinkedHashMap<>();
 
         public Builder host(final String host) {
@@ -170,6 +179,11 @@ public final class DatabaseConfig {
             return this;
         }
 
+        public Builder driverClassName(final String driverClassName) {
+            this.driverClassName = driverClassName;
+            return this;
+        }
+
         public Builder jdbcProperties(final Map<String, String> jdbcProperties) {
             this.jdbcProperties.clear();
             this.jdbcProperties.putAll(Objects.requireNonNull(jdbcProperties, "JDBC properties must not be null."));
@@ -200,6 +214,7 @@ public final class DatabaseConfig {
             if (resolvedMigration.enabled()) {
                 TablePrefixes.table(resolvedTablePrefix, "flyway_schema_history");
             }
+            final String resolvedDriverClassName = optionalNonBlank(this.driverClassName);
 
             final Map<String, String> validatedJdbcProperties = new LinkedHashMap<>();
             for (final Map.Entry<String, String> entry : this.jdbcProperties.entrySet()) {
@@ -218,8 +233,17 @@ public final class DatabaseConfig {
                 resolvedPool,
                 resolvedExecutor,
                 resolvedMigration,
+                resolvedDriverClassName,
                 Map.copyOf(validatedJdbcProperties)
             );
+        }
+
+        private static String optionalNonBlank(final String value) {
+            if (value == null) {
+                return null;
+            }
+            final String sanitized = value.trim();
+            return sanitized.isEmpty() ? null : sanitized;
         }
 
         private static String requireNonBlank(final String value, final String message) {

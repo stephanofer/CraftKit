@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -21,6 +22,19 @@ final class DatabaseConfigTest {
 
         assertEquals(3, config.executor().threadCount());
         assertEquals("", config.tablePrefix());
+        assertNull(config.driverClassName());
+    }
+
+    @Test
+    void buildTrimsOptionalDriverClassName() {
+        final DatabaseConfig config = DatabaseConfig.builder()
+            .host("localhost")
+            .database("craftkit")
+            .username("hera")
+            .driverClassName(" com.mysql.cj.jdbc.Driver ")
+            .build();
+
+        assertEquals("com.mysql.cj.jdbc.Driver", config.driverClassName());
     }
 
     @Test
