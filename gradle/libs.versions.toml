@@ -7,7 +7,7 @@ lettuce = "7.6.0.RELEASE"
 flyway = "12.8.1"
 zmenu = "1.1.1.5"
 boosted-yaml = "1.3.7"
-networkplayersettings = "1.0.0-SNAPSHOT"
+networkplayersettings = "2.0.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }

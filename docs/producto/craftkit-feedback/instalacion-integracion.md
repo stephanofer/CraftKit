@@ -17,7 +17,7 @@ dependencies {
     compileOnly("com.hera.craftkit:craftkit-feedback:1.1.0")
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.69-stable")
     compileOnly("dev.dejvokep:boosted-yaml:1.3.7")
-    compileOnly("com.stephanofer:networkplayersettings:1.0.0-SNAPSHOT")
+    compileOnly("com.stephanofer:networkplayersettings:2.0.0")
 }
 ```
 
@@ -36,7 +36,7 @@ dependencies {
 `craftkit-feedback` compila contra:
 
 ```kotlin
-compileOnly("com.stephanofer:networkplayersettings:1.0.0-SNAPSHOT")
+compileOnly("com.stephanofer:networkplayersettings:2.0.0")
 ```
 
 En este repositorio, `craftkit-feedback` agrega `mavenLocal()` porque esa coordenada se espera disponible localmente. El servidor debe tener el plugin `NetworkPlayerSettings` habilitado y debe registrar `PlayerSettingsService` en Bukkit `ServicesManager`.

@@ -52,7 +52,7 @@ Versiones actuales en `gradle/libs.versions.toml`:
 | --- | --- | --- |
 | Paper API | `io.papermc.paper:paper-api` | `26.1.2.build.69-stable` |
 | BoostedYAML | `dev.dejvokep:boosted-yaml` | `1.3.7` |
-| NetworkPlayerSettings | `com.stephanofer:networkplayersettings` | `1.0.0-SNAPSHOT` |
+| NetworkPlayerSettings | `com.stephanofer:networkplayersettings` | `2.0.0` |
 
 El repositorio configura `group=com.hera.craftkit` y `version=1.1.0`, y todos los subproyectos aplican `maven-publish`. En un entorno publicado localmente, la coordenada esperada del módulo es `com.hera.craftkit:craftkit-feedback:1.1.0`.
 

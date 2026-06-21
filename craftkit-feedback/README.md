@@ -6,10 +6,6 @@ Consumers own their BoostedYAML language document lifecycle. This module receive
 
 ## Compile-only NetworkPlayerSettings API
 
-This repository does not contain a published Maven coordinate or local JAR for NetworkPlayerSettings. The module build expects the API jar at:
+This repository resolves NetworkPlayerSettings through the shared version catalog using the published Maven coordinate `com.stephanofer:networkplayersettings:2.0.0`.
 
-```text
-libs/NetworkPlayerSettings.jar
-```
-
-That jar must expose `com.stephanofer.networkplayersettings.api.PlayerSettingsService` as documented in `docs/NetworkPlayerSettings/api-publica.md`.
+That dependency must expose `com.stephanofer.networkplayersettings.settings.api.PlayerSettingsService` as documented in `docs/NetworkPlayerSettings/api-publica.md`.
