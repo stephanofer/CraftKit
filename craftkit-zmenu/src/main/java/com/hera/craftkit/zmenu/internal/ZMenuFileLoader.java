@@ -1,8 +1,8 @@
 package com.hera.craftkit.zmenu.internal;
 
 import com.hera.craftkit.zmenu.ZMenuException;
-import fr.maxlego08.menu.api.BedrockInventory;
-import fr.maxlego08.menu.api.DialogInventory;
+import fr.maxlego08.menu.api.inventory.bedrock.BedrockInventory;
+import fr.maxlego08.menu.api.inventory.dialog.DialogInventory;
 import fr.maxlego08.menu.api.Inventory;
 import fr.maxlego08.menu.api.pattern.ActionPattern;
 import fr.maxlego08.menu.api.pattern.Pattern;
