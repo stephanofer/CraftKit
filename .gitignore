@@ -6,6 +6,9 @@
 build/
 **/build/
 
+# Java/Kotlin compiled output
+**/bin/
+
 # IntelliJ IDEA
 .idea/
 *.iml
