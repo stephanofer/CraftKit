@@ -11,6 +11,7 @@ com.hera.craftkit.redis
   RedisConfig
   RedisCache
   RedisState
+  RedisSet
   RedisPublisher
   RedisSubscriber
   RedisSubscription
@@ -46,6 +47,7 @@ RedisClient redis = RedisClients.lettuce(config);
 - `RedisClient`
 - `RedisCache`
 - `RedisState`
+- `RedisSet`
 - `RedisPublisher`
 - `RedisSubscriber`
 - `RedisCommandExecutor` interno
@@ -55,6 +57,7 @@ Por eso las vistas públicas devuelven el mismo objeto bajo interfaces específi
 ```java
 redis.cache();
 redis.state();
+redis.set();
 redis.publisher();
 redis.subscriber();
 redis.coordinator();
@@ -85,6 +88,11 @@ Se usa para:
 - `increment`
 - `incrementBy`
 - `getAndDelete`
+- `set.add` / `SADD`
+- `set.remove` / `SREM`
+- `set.members` / `SMEMBERS`
+- `set.size` / `SCARD`
+- `set.contains` / `SISMEMBER`
 - `publish`
 - Lua interno de leases
 

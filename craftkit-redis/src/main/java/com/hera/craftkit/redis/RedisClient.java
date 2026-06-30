@@ -10,6 +10,8 @@ public interface RedisClient extends AutoCloseable {
 
     RedisState state();
 
+    RedisSet set();
+
     RedisPublisher publisher();
 
     RedisSubscriber subscriber();

@@ -20,5 +20,5 @@ lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
 zmenu-api = { module = "fr.maxlego08.menu:zmenu-api", version.ref = "zmenu" }
-boosted-yaml = { module = "dev.dejvokep:boosted-yaml", version.ref = "boosted-yaml" }
+boosted-yaml = { module = "com.stephanofer.boostedyaml:boosted-yaml", version.ref = "boosted-yaml" }
 networkplayersettings = { module = "com.stephanofer:networkplayersettings", version.ref = "networkplayersettings" }

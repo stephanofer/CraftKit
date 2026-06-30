@@ -1,6 +1,6 @@
 # Caché y estado rápido — `craftkit-redis`
 
-`RedisCache` y `RedisState` cubren operaciones simples para datos temporales, caché compartida y estado rápido entre servidores.
+`RedisCache` y `RedisState` cubren operaciones simples para datos temporales, caché compartida y estado rápido entre servidores. Para índices distribuidos o membership checks concurrentes, usar [`RedisSet`](./sets.md).
 
 ## `RedisCache`
 

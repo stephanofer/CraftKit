@@ -8,6 +8,7 @@ import com.hera.craftkit.redis.RedisException;
 import com.hera.craftkit.redis.RedisMessage;
 import com.hera.craftkit.redis.RedisMessageHandler;
 import com.hera.craftkit.redis.RedisPublisher;
+import com.hera.craftkit.redis.RedisSet;
 import com.hera.craftkit.redis.RedisState;
 import com.hera.craftkit.redis.RedisSubscriber;
 import com.hera.craftkit.redis.RedisSubscription;
@@ -34,12 +35,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-public final class LettuceRedisClient implements RedisClient, RedisCache, RedisState, RedisPublisher, RedisSubscriber, RedisCommandExecutor {
+public final class LettuceRedisClient implements RedisClient, RedisCache, RedisState, RedisSet, RedisPublisher, RedisSubscriber, RedisCommandExecutor {
 
     private final RedisConfig config;
     private final DefaultClientResources resources;
@@ -104,6 +106,11 @@ public final class LettuceRedisClient implements RedisClient, RedisCache, RedisS
 
     @Override
     public RedisState state() {
+        return this;
+    }
+
+    @Override
+    public RedisSet set() {
         return this;
     }
 
@@ -216,6 +223,40 @@ public final class LettuceRedisClient implements RedisClient, RedisCache, RedisS
     public CompletableFuture<String> getAndDelete(final String key) {
         final String resolvedKey = RedisNames.validateKey(key);
         return command("get-and-delete", commands -> commands.getdel(resolvedKey));
+    }
+
+    @Override
+    public CompletableFuture<Long> add(final String key, final String... members) {
+        final String resolvedKey = RedisNames.validateKey(key);
+        final String[] resolvedMembers = validateMembers(members, "Redis set add requires at least one member.");
+        return command("set-add", commands -> commands.sadd(resolvedKey, resolvedMembers));
+    }
+
+    @Override
+    public CompletableFuture<Long> remove(final String key, final String... members) {
+        final String resolvedKey = RedisNames.validateKey(key);
+        final String[] resolvedMembers = validateMembers(members, "Redis set remove requires at least one member.");
+        return command("set-remove", commands -> commands.srem(resolvedKey, resolvedMembers));
+    }
+
+    @Override
+    public CompletableFuture<Set<String>> members(final String key) {
+        final String resolvedKey = RedisNames.validateKey(key);
+        return command("set-members", commands -> commands.smembers(resolvedKey))
+            .thenApply(members -> Collections.unmodifiableSet(new LinkedHashSet<>(members)));
+    }
+
+    @Override
+    public CompletableFuture<Long> size(final String key) {
+        final String resolvedKey = RedisNames.validateKey(key);
+        return command("set-size", commands -> commands.scard(resolvedKey));
+    }
+
+    @Override
+    public CompletableFuture<Boolean> contains(final String key, final String member) {
+        final String resolvedKey = RedisNames.validateKey(key);
+        final String resolvedMember = RedisNames.validateValue(member, "Redis set member");
+        return command("set-contains", commands -> commands.sismember(resolvedKey, resolvedMember));
     }
 
     @Override
@@ -393,6 +434,17 @@ public final class LettuceRedisClient implements RedisClient, RedisCache, RedisS
             throw new RedisException("Redis TTL must be positive.");
         }
         return resolved;
+    }
+
+    private static String[] validateMembers(final String[] members, final String emptyMessage) {
+        if (members == null || members.length == 0) {
+            throw new RedisException(emptyMessage);
+        }
+        final String[] resolvedMembers = new String[members.length];
+        for (int index = 0; index < members.length; index++) {
+            resolvedMembers[index] = RedisNames.validateValue(members[index], "Redis set member");
+        }
+        return resolvedMembers;
     }
 
     private static RedisURI uri(final RedisConfig config) {

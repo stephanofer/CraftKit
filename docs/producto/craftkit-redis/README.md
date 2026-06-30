@@ -1,6 +1,6 @@
 # `craftkit-redis`
 
-`craftkit-redis` es el módulo de CraftKit que entrega una integración Redis estándar para plugins de HERA: conexión Lettuce configurada, operaciones async, caché con TTL, estado rápido, Pub/Sub entre servidores, leases ligeros para coordinación y helpers de nombres para keys/channels.
+`craftkit-redis` es el módulo de CraftKit que entrega una integración Redis estándar para plugins de HERA: conexión Lettuce configurada, operaciones async, caché con TTL, estado rápido, sets distribuidos, Pub/Sub entre servidores, leases ligeros para coordinación y helpers de nombres para keys/channels.
 
 El módulo es **Paper-free**: no depende de Paper/Bukkit y no agenda callbacks al hilo principal. Los plugins consumidores deben volver al scheduler correcto antes de tocar APIs de Paper.
 
@@ -9,6 +9,7 @@ El módulo es **Paper-free**: no depende de Paper/Bukkit y no agenda callbacks a
 - Crea y administra internamente un cliente Lettuce `7.6.0.RELEASE`.
 - Expone una API pública basada en `CompletableFuture`, sin comandos Redis síncronos públicos.
 - Mantiene Lettuce como detalle interno: no hay raw Lettuce público en v1.
+- Expone Redis Sets para índices distribuidos y membership checks concurrentes.
 - Aplica defaults seguros para timeouts, reconexión, colas y threads.
 - Obliga a usar TTL en escrituras de caché temporales.
 - Estandariza nombres de keys y channels con `keyPrefix`, `environment` y `serverId`.
@@ -39,10 +40,11 @@ La dependencia está como `implementation` porque la API pública de CraftKit no
 2. [Arquitectura y componentes](./arquitectura.md)
 3. [Configuración](./configuracion.md)
 4. [Caché y estado rápido](./cache-estado.md)
-5. [Pub/Sub entre servidores](./pubsub.md)
-6. [Coordinación con leases](./coordinacion-leases.md)
-7. [Lifecycle, errores y límites](./lifecycle-errores-limites.md)
-8. [Referencia de API pública](./referencia-api.md)
+5. [Sets distribuidos](./sets.md)
+6. [Pub/Sub entre servidores](./pubsub.md)
+7. [Coordinación con leases](./coordinacion-leases.md)
+8. [Lifecycle, errores y límites](./lifecycle-errores-limites.md)
+9. [Referencia de API pública](./referencia-api.md)
 
 ## Regla mental rápida
 
@@ -60,6 +62,7 @@ CraftKit proporciona:
 - recursos Lettuce internos;
 - API async;
 - helpers de keys/channels;
+- sets distribuidos;
 - Pub/Sub;
 - leases ligeros;
 - cierre y errores base.

@@ -84,6 +84,24 @@ redis.cache().get(key).thenAccept(value -> {
 
 La API actual devuelve `CompletableFuture<String>`. Redis puede devolver `null` cuando la key no existe.
 
+## Mantener un índice distribuido
+
+```java
+String indexKey = redis.key("gamekit", "server-index", "bedwars", "arena");
+
+redis.set().add(indexKey, "bedwars-arena-01");
+
+redis.set().members(indexKey).thenCompose(serverIds -> {
+    List<String> serverKeys = serverIds.stream()
+        .map(serverId -> redis.key("gamekit", "server", serverId))
+        .toList();
+
+    return redis.cache().getMany(serverKeys);
+});
+```
+
+`RedisSet` usa sets reales de Redis para membership concurrente. No usar strings separados por coma para índices compartidos entre servidores.
+
 ## Publicar evento
 
 ```java

@@ -19,6 +19,7 @@ public interface RedisClient extends AutoCloseable {
     CompletableFuture<Boolean> ping();
     RedisCache cache();
     RedisState state();
+    RedisSet set();
     RedisPublisher publisher();
     RedisSubscriber subscriber();
     RedisCoordinator coordinator();
@@ -129,6 +130,28 @@ public interface RedisState {
 ```
 
 `getAndDelete(...)` usa `GETDEL` y puede completar con `null`.
+
+## `RedisSet`
+
+```java
+public interface RedisSet {
+    CompletableFuture<Long> add(String key, String... members);
+    CompletableFuture<Long> remove(String key, String... members);
+    CompletableFuture<Set<String>> members(String key);
+    CompletableFuture<Long> size(String key);
+    CompletableFuture<Boolean> contains(String key, String member);
+    CompletableFuture<Boolean> expire(String key, Duration ttl);
+}
+```
+
+Notas:
+
+- `add(...)` usa `SADD` y requiere al menos un member.
+- `remove(...)` usa `SREM` y requiere al menos un member.
+- `members(...)` usa `SMEMBERS` y devuelve un `Set` no modificable.
+- `size(...)` usa `SCARD`.
+- `contains(...)` usa `SISMEMBER`.
+- `expire(...)` usa `PEXPIRE` sobre la key del set y requiere TTL positivo.
 
 ## `RedisPublisher`
 

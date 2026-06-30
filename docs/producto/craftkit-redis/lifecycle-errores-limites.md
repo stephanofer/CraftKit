@@ -84,6 +84,12 @@ No incluido en v1:
 - auto-renewal de leases;
 - comandos peligrosos como `KEYS`, `FLUSHDB` o acceso raw a comandos sync.
 
+## Sets distribuidos
+
+`RedisSet` está pensado para índices explícitos y membership checks concurrentes. No descubre keys y no reemplaza un modelo de datos completo.
+
+`members(...)` usa `SMEMBERS`, por lo que debe usarse sobre sets acotados y controlados por el consumidor. Si un caso necesita colecciones enormes o paginación, primero hay que diseñar una API específica en CraftKit en vez de improvisar con `KEYS` o strings manuales.
+
 ## Pub/Sub no durable
 
 Pub/Sub no guarda mensajes. Si un servidor está desconectado al momento de publicar, puede perder el evento.

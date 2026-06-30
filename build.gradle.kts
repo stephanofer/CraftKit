@@ -15,6 +15,7 @@ subprojects {
     apply(plugin = "maven-publish")
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven {
             name = "papermc"
